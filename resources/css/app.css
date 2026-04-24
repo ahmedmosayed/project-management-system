@@ -1,0 +1,18 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* App shell: sidebar + main */
+.app-sidebar {
+    width: 260px;
+    min-height: 100vh;
+}
+
+.app-main {
+    min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+    .app-sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+}
