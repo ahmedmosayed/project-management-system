@@ -27,7 +27,7 @@ class Create extends Component
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->hasRole('admin'), 403);
+        abort_unless(auth()->user()->can('create', \App\Models\Project::class), 403);
         $this->status = ProjectStatus::Planning->value;
     }
 
@@ -49,6 +49,7 @@ class Create extends Component
 
     public function save(ProjectService $projects): void
     {
+        abort_unless(auth()->user()->can('create', \App\Models\Project::class), 403);
         $this->successMessage = '';
         $this->budget = $this->budget === '' ? null : $this->budget;
         $validated = $this->validate();

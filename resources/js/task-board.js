@@ -50,9 +50,9 @@ function initTaskBoardSortable() {
                         .filter((n) => !Number.isNaN(n));
 
                     if (fromCol !== toCol) {
-                        await component.call('moveToColumn', taskId, toCol);
+                        await component.moveToColumn(taskId, toCol);
                     }
-                    await component.call('syncColumnOrder', toCol, ids);
+                    await component.syncColumnOrder(toCol, ids);
                 },
             })
         );

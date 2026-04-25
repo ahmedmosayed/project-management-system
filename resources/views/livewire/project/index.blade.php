@@ -1,9 +1,9 @@
 <div>
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4 pb-3 border-bottom">
         <h1 class="h4 mb-0">{{ __('Projects') }}</h1>
-        @role('admin')
+        @can('create', \App\Models\Project::class)
             <a href="{{ route('projects.create') }}" class="btn btn-primary btn-sm" wire:navigate>{{ __('Create project') }}</a>
-        @endrole
+        @endcan
     </div>
 
     @if ($bannerMessage)
