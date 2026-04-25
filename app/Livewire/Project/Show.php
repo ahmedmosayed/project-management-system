@@ -62,10 +62,19 @@ class Show extends Component
     /** @var array<int, mixed> */
     public array $tk_uploads = [];
 
+    public bool $canUpdateTask = false;
+
     public ?string $bannerMessage = null;
 
     public function mount(Project $project): void
     {
+        \Log::info('Project Show Mount', [
+            'user_id' => auth()->id(),
+            'project_id' => $project->id,
+            'can_view' => auth()->user()->can('view', $project),
+            'has_role_team_member' => auth()->user()->hasRole('team-member'),
+            'has_tasks' => $project->tasks()->where('assigned_to', auth()->id())->exists(),
+        ]);
         abort_unless(auth()->user()->can('view', $project), 403);
         $this->project = $project->load('manager');
         $this->latestReport = $project->reports()->first();
@@ -159,7 +168,8 @@ class Show extends Component
             $t = Task::query()
                 ->where('project_id', $this->project->id)
                 ->findOrFail($taskId);
-            abort_unless(auth()->user()->can('update', $t), 403);
+            abort_unless(auth()->user()->can('view', $t), 403);
+            $this->canUpdateTask = auth()->user()->can('update', $t);
             $this->tk_milestone_id = $t->milestone_id;
             $this->tk_parent_id = $t->parent_id;
             $this->tk_assigned_to = $t->assigned_to;
@@ -303,12 +313,17 @@ class Show extends Component
 
     private function loadTasks(): void
     {
-        $this->tasks = Task::query()
+        $query = Task::query()
             ->where('project_id', $this->project->id)
             ->with('assignee')
             ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
+
+        if (auth()->user()->hasRole('team-member')) {
+            $query->where('assigned_to', auth()->user()->id);
+        }
+
+        $this->tasks = $query->get();
     }
 
     #[On('task-updated')]
@@ -355,7 +370,9 @@ class Show extends Component
             );
         }
 
-        return $flat->whereNull('parent_id')->sortBy(['sort_order', 'id'])->values();
+        return $flat->filter(function ($task) use ($flat) {
+            return is_null($task->parent_id) || ! $flat->contains('id', $task->parent_id);
+        })->sortBy(['sort_order', 'id'])->values();
     }
 
     public function render(): View
@@ -369,7 +386,7 @@ class Show extends Component
 
         $backlogForest = $this->buildTaskForest($this->tasksForMilestone(null));
 
-        $teamMembers = User::query()->orderBy('name')->get(['id', 'name', 'email']);
+        $teamMembers = User::query()->with('roles')->role('team-member')->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('livewire.project.show', [
             'milestoneTrees' => $milestoneTrees,

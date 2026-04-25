@@ -10,6 +10,10 @@
         </div>
     </x-slot>
 
+    @role('admin')
+        <livewire:dashboard.admin-stats />
+    @endrole
+
     <livewire:dashboard.stats />
 
     <livewire:dashboard.reports />

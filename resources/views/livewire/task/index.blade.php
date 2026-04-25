@@ -79,9 +79,9 @@
                             <td><span class="badge bg-secondary">{{ $task->priority }}</span></td>
                             <td class="small">{{ $task->deadline?->format('Y-m-d') ?? '—' }}</td>
                             <td class="text-end text-nowrap">
-                                @can('update', $task)
+                                @can('view', $task)
                                     <button type="button" class="btn btn-sm btn-outline-primary" wire:click="openEditModal({{ $task->id }})">
-                                        {{ __('Edit') }}
+                                        {{ auth()->user()->can('update', $task) ? __('Edit') : __('View') }}
                                     </button>
                                 @endcan
                                 @can('delete', $task)
@@ -113,11 +113,12 @@
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title h5">{{ __('Edit task') }}</h2>
+                        <h2 class="modal-title h5">{{ $canUpdateTask ? __('Edit task') : __('View task') }}</h2>
                         <button type="button" class="btn-close" wire:click="closeEditModal" aria-label="{{ __('Close') }}"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row g-3">
+                        <fieldset @disabled(!$canUpdateTask)>
+                            <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label" for="ed_project_id">{{ __('Project') }}</label>
                                 <select id="ed_project_id" class="form-select" wire:model.live="ed_project_id" disabled>
@@ -176,11 +177,13 @@
                                 <label class="form-label" for="ed_deadline">{{ __('Deadline') }}</label>
                                 <input id="ed_deadline" type="date" class="form-control" wire:model="ed_deadline">
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" wire:click="closeEditModal">{{ __('Cancel') }}</button>
-                        <button type="button" class="btn btn-primary" wire:click="saveEdit">{{ __('Save') }}</button>
+                        @if($canUpdateTask)
+                            <button type="button" class="btn btn-primary" wire:click="saveEdit">{{ __('Save') }}</button>
+                        @endif
                     </div>
                 </div>
             </div>

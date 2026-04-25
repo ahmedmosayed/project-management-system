@@ -24,11 +24,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //        Route::get('projects/create', ProjectCreate::class)->name('projects.create');
 //    });
     
-        Route::middleware(['permission:manage-projects'])->group(function () {
-    Route::get('projects', ProjectIndex::class)->name('projects.index');
-    Route::get('projects/create', ProjectCreate::class)->name('projects.create');
-    Route::get('projects/{project}', ProjectShow::class)->name('projects.show');
-});
+    Route::middleware(['permission:view-tasks|manage-projects'])->group(function () {
+        Route::get('projects', ProjectIndex::class)->name('projects.index');
+        Route::get('projects/{project}', ProjectShow::class)->name('projects.show');
+    });
+
+    Route::middleware(['permission:manage-projects'])->group(function () {
+        Route::get('projects/create', ProjectCreate::class)->name('projects.create');
+    });
 
     Route::middleware(['permission:view-tasks|manage-projects|manage-tasks'])->group(function () {
         Route::get('tasks', TaskIndex::class)->name('tasks.index');

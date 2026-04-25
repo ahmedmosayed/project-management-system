@@ -60,10 +60,13 @@ class Index extends Component
         $this->dispatch('task-updated', projectId: $task->project_id);
     }
 
+    public bool $canUpdateTask = false;
+
     public function openEditModal(int $taskId): void
     {
         $task = Task::query()->with('project')->findOrFail($taskId);
-        abort_unless(auth()->user()->can('update', $task), 403);
+        abort_unless(auth()->user()->can('view', $task), 403);
+        $this->canUpdateTask = auth()->user()->can('update', $task);
 
         $this->editingTaskId = $task->id;
         $this->ed_project_id = $task->project_id;
@@ -162,7 +165,7 @@ class Index extends Component
 
         $tasks = $query->paginate(15);
 
-        $usersForFilter = User::query()->orderBy('name')->get(['id', 'name']);
+        $usersForFilter = User::query()->role('team-member')->orderBy('name')->get(['id', 'name']);
 
         $projectsForEdit = Project::query()->visibleTo(auth()->user())->orderBy('name')->get(['id', 'name']);
 

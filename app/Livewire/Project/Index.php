@@ -155,7 +155,7 @@ class Index extends Component
         // Only admins can filter by manager - PMs only see their own projects
         $managerOptions = auth()->user()->hasRole('admin')
             ? \App\Models\User::query()
-                ->role(['admin', 'project-manager'])
+                ->role('project-manager')
                 ->orderBy('name')
                 ->get(['id', 'name', 'email'])
             : collect();

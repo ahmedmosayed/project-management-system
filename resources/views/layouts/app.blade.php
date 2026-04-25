@@ -26,12 +26,12 @@
                        href="{{ route('dashboard') }}" wire:navigate>
                         {{ __('Dashboard') }}
                     </a>
-                    @can('manage-projects')
+                    @canany(['manage-projects', 'view-tasks'])
                         <a class="nav-link text-white-50 rounded px-2 py-2 {{ request()->routeIs('projects.*') ? 'bg-secondary text-white' : '' }}"
                            href="{{ route('projects.index') }}" wire:navigate>
                             {{ __('Projects') }}
                         </a>
-                    @endcan
+                    @endcanany
                     @can('view-tasks')
                         <a class="nav-link text-white-50 rounded px-2 py-2 {{ request()->routeIs('tasks.index') ? 'bg-secondary text-white' : '' }}"
                            href="{{ route('tasks.index') }}" wire:navigate>

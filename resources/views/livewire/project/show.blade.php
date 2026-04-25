@@ -7,12 +7,13 @@
             <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
                 <span class="small text-muted">{{ __('Progress') }}</span>
                 <div class="progress flex-grow-1" style="min-width: 120px; max-width: 280px; height: 8px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ $project->progressPercent() }}%" aria-valuenow="{{ $project->progressPercent() }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar" role="progressbar" style="width: {{ $project->progressPercent(auth()->user()) }}%" aria-valuenow="{{ $project->progressPercent(auth()->user()) }}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
-                <span class="small fw-medium">{{ number_format($project->progressPercent(), 1) }}%</span>
+                <span class="small fw-medium">{{ number_format($project->progressPercent(auth()->user()), 1) }}%</span>
             </div>
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            @can('close', $project)
             @if ($project->status !== \App\Enums\ProjectStatus::Completed)
                 <button type="button" class="btn btn-success btn-sm"
                         wire:click="markProjectCompleted"
@@ -20,6 +21,8 @@
                     {{ __('Mark project completed') }}
                 </button>
             @endif
+            @endcan
+            @can('update', $project)
             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="openMilestoneModal()">
                 {{ __('Add milestone') }}
             </button>
@@ -29,6 +32,7 @@
             <button type="button" class="btn btn-info btn-sm" wire:click="createReportTask">
                 {{ __('Generate Report') }}
             </button>
+            @endcan
         </div>
     </div>
 
@@ -45,6 +49,7 @@
         </div>
     @endif
 
+    @can('update', $project)
     @if ($latestReport)
         <div class="card shadow-sm mb-4">
             <div class="card-header py-2 fw-semibold">{{ __('Latest Project Report') }}</div>
@@ -53,6 +58,7 @@
             </div>
         </div>
     @endif
+    @endcan
 
     @if ($project->status === \App\Enums\ProjectStatus::Completed && ($project->closure_performance_notes || $project->completed_at))
         <div class="card shadow-sm border-success mb-4">
@@ -72,14 +78,16 @@
     @endif
 
     <div class="row g-3 mb-4">
-        <div class="col-lg-8">
+        <div class="{{ auth()->user()->can('update', $project) ? 'col-lg-8' : 'col-12' }}">
     {{-- Backlog (WBS) --}}
     <div class="card shadow-sm mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">{{ __('Backlog & general tasks') }}</span>
+            @can('update', $project)
             <button type="button" class="btn btn-sm btn-outline-primary" wire:click="openTaskModal(null, null, null)">
                 {{ __('Add task') }}
             </button>
+            @endcan
         </div>
         <div class="table-responsive">
             <table class="table table-sm mb-0 align-middle">
@@ -123,6 +131,7 @@
                     @endif
                 </div>
                 <div class="d-flex gap-1">
+                    @can('update', $project)
                     <button type="button" class="btn btn-sm btn-outline-primary"
                             wire:click="openTaskModal(null, {{ $milestone->id }}, null)">
                         {{ __('Add task') }}
@@ -136,6 +145,7 @@
                             wire:confirm="{{ __('Delete milestone and unlink tasks?') }}">
                         {{ __('Delete') }}
                     </button>
+                    @endcan
                 </div>
             </div>
             <div class="table-responsive">
@@ -174,9 +184,11 @@
         </div>
     @endforelse
         </div>
+        @can('update', $project)
         <div class="col-lg-4">
             <livewire:activity.feed :project-id="$project->id" :key="'activity-'.$project->id" />
         </div>
+        @endcan
     </div>
 
     {{-- Milestone modal --}}
@@ -227,14 +239,20 @@
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title h5">{{ $editingTaskId ? __('Edit task') : __('New task') }}</h2>
+                        <h2 class="modal-title h5">
+                            @if ($editingTaskId)
+                                {{ $canUpdateTask ? __('Edit task') : __('View task') }}
+                            @else
+                                {{ __('New task') }}
+                            @endif
+                        </h2>
                         <button type="button" class="btn-close" wire:click="closeTaskModal"></button>
                     </div>
                     <form wire:submit="saveTask">
                         <div class="modal-body">
-                            <input type="hidden" wire:model="tk_parent_id">
-
-                            <div class="row g-3">
+                            <fieldset @disabled($editingTaskId && !$canUpdateTask)>
+                                <input type="hidden" wire:model="tk_parent_id">
+                                <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('Milestone') }}</label>
                                     @if ($editingTaskId)
@@ -257,7 +275,7 @@
                                     <select class="form-select" wire:model.live="tk_assigned_to">
                                         <option value="">{{ __('Unassigned') }}</option>
                                         @foreach ($teamMembers as $u)
-                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                            <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->roles->pluck('name')->join(', ') }})</option>
                                         @endforeach
                                     </select>
                                     @error('tk_assigned_to') <div class="text-danger small">{{ $message }}</div> @enderror
@@ -301,7 +319,7 @@
                                     @error('tk_uploads.*') <div class="text-danger small">{{ $message }}</div> @enderror
                                     <div wire:loading wire:target="tk_uploads" class="small text-muted">{{ __('Preparing files…') }}</div>
                                 </div>
-                            </div>
+                            </fieldset>
                             @if ($tk_parent_id)
                                 <p class="small text-muted mt-2 mb-0">{{ __('Subtask of #:id', ['id' => $tk_parent_id]) }}</p>
                             @endif
@@ -316,7 +334,9 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" wire:click="closeTaskModal">{{ __('Cancel') }}</button>
-                            <button type="submit" class="btn btn-primary">{{ __('Save task') }}</button>
+                            @if (!$editingTaskId || $canUpdateTask)
+                                <button type="submit" class="btn btn-primary">{{ __('Save task') }}</button>
+                            @endif
                         </div>
                     </form>
                 </div>

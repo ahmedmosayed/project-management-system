@@ -51,7 +51,7 @@
                             <select id="manager_id" class="form-select @error('manager_id') is-invalid @enderror" wire:model.blur="manager_id">
                                 <option value="">{{ __('Select manager') }}</option>
                                 @foreach ($managers as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }} - {{ $user->roles->pluck('name')->join(', ') }})</option>
                                 @endforeach
                             </select>
                             @error('manager_id') <div class="invalid-feedback">{{ $message }}</div> @enderror

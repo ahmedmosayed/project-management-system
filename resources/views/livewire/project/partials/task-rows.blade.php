@@ -11,19 +11,25 @@
         <td><span class="badge bg-secondary">{{ $task->priority }}</span></td>
         <td class="small">{{ $task->deadline?->format('Y-m-d') ?? '—' }}</td>
         <td class="text-end text-nowrap">
+            @can('update', $task)
             <button type="button" class="btn btn-sm btn-outline-secondary py-0"
                     wire:click="openTaskModal(null, @js($milestoneId), {{ $task->id }})">
                 {{ __('Subtask') }}
             </button>
+            @endcan
+            @can('view', $task)
             <button type="button" class="btn btn-sm btn-outline-primary py-0"
                     wire:click="openTaskModal({{ $task->id }}, @js($milestoneId), null)">
-                {{ __('Edit') }}
+                {{ auth()->user()->can('update', $task) ? __('Edit') : __('View') }}
             </button>
+            @endcan
+            @can('delete', $task)
             <button type="button" class="btn btn-sm btn-outline-danger py-0"
                     wire:click="deleteTask({{ $task->id }})"
                     wire:confirm="{{ __('Delete this task?') }}">
                 {{ __('Delete') }}
             </button>
+            @endcan
         </td>
     </tr>
     @if ($task->treeChildren->isNotEmpty())

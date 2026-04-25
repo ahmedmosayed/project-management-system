@@ -77,21 +77,32 @@ class Project extends Model
             return $query;
         }
 
-        if ($user->hasRole('project-manager')) {
-            return $query->where('manager_id', $user->id);
-        }
+        return $query->where(function ($q) use ($user) {
+            if ($user->hasRole('project-manager')) {
+                $q->orWhere('manager_id', $user->id);
+            }
 
-        return $query->where('id', 0);
+            if ($user->hasRole('team-member')) {
+                $q->orWhereHas('tasks', function ($sq) use ($user) {
+                    $sq->where('assigned_to', $user->id);
+                });
+            }
+        });
     }
 
-    public function progressPercent(): float
+    public function progressPercent(?User $user = null): float
     {
-        $total = $this->tasks()->count();
+        $query = $this->tasks();
+        if ($user && $user->hasRole('team-member')) {
+            $query->where('assigned_to', $user->id);
+        }
+
+        $total = $query->count();
         if ($total === 0) {
             return 0.0;
         }
 
-        $done = $this->tasks()->where('status', 'done')->count();
+        $done = (clone $query)->where('status', 'done')->count();
 
         return round(($done / $total) * 100, 1);
     }

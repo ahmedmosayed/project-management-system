@@ -44,7 +44,9 @@
                         <th scope="col">{{ __('Manager') }}</th>
                         <th scope="col">{{ __('Status') }}</th>
                         <th scope="col">{{ __('Dates') }}</th>
+                        @can('manage-projects')
                         <th scope="col" class="text-end">{{ __('Budget') }}</th>
+                        @endcan
                         <th scope="col" class="text-end">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
@@ -63,6 +65,7 @@
                                     —
                                 @endif
                             </td>
+                            @can('manage-projects')
                             <td class="text-end">
                                 @if ($project->budget !== null)
                                     {{ number_format((float) $project->budget, 2) }}
@@ -70,13 +73,17 @@
                                     —
                                 @endif
                             </td>
+                            @endcan
                             <td class="text-end text-nowrap">
                                 <a href="{{ route('projects.show', $project) }}" class="btn btn-sm btn-outline-info" wire:navigate>
                                     {{ __('Workspace') }}
                                 </a>
+                                @can('update', $project)
                                 <button type="button" class="btn btn-sm btn-outline-primary" wire:click="openEdit({{ $project->id }})">
                                     {{ __('Edit') }}
                                 </button>
+                                @endcan
+                                @can('close', $project)
                                 @if ($project->status->value !== 'closed')
                                     <button type="button" class="btn btn-sm btn-outline-warning"
                                             wire:click="closeProject({{ $project->id }})"
@@ -84,11 +91,14 @@
                                         {{ __('Close') }}
                                     </button>
                                 @endif
+                                @endcan
+                                @can('delete', $project)
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         wire:click="deleteProject({{ $project->id }})"
                                         wire:confirm="{{ __('Delete this project permanently?') }}">
                                     {{ __('Delete') }}
                                 </button>
+                                @endcan
                             </td>
                         </tr>
                     @empty

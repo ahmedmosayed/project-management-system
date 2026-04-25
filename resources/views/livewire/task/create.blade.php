@@ -53,7 +53,7 @@
                         <select id="assigned_to" class="form-select" wire:model="assigned_to">
                             <option value="">{{ __('Unassigned') }}</option>
                             @foreach ($teamMembers as $u)
-                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->roles->pluck('name')->join(', ') }})</option>
                             @endforeach
                         </select>
                         @error('assigned_to') <div class="text-danger small">{{ $message }}</div> @enderror

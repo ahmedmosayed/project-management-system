@@ -145,7 +145,7 @@ class Create extends Component
                 ->get(['id', 'title', 'wbs_code'])
             : collect();
 
-        $teamMembers = User::query()->orderBy('name')->get(['id', 'name', 'email']);
+        $teamMembers = User::query()->with('roles')->role('team-member')->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('livewire.task.create', [
             'projects' => $projects,

@@ -73,13 +73,10 @@ class Create extends Component
     public function render()
     {
         $managers = \App\Models\User::query()
-            ->role(['admin', 'project-manager'])
+            ->with('roles')
+            ->role('project-manager')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
-
-        if ($managers->isEmpty()) {
-            $managers = \App\Models\User::query()->orderBy('name')->get(['id', 'name', 'email']);
-        }
 
         return view('livewire.project.create', [
             'managers' => $managers,

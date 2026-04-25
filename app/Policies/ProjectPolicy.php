@@ -18,7 +18,10 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        return $user->hasRole('project-manager') && $project->manager_id === $user->id;
+        $canAsManager = $user->hasRole('project-manager') && $project->manager_id === $user->id;
+        $canAsTeamMember = $user->hasRole('team-member') && $project->tasks()->where('assigned_to', $user->id)->exists();
+
+        return $canAsManager || $canAsTeamMember;
     }
 
     public function create(User $user): bool
